@@ -18,63 +18,60 @@
 
         <ImageView
             android:id="@+id/webIcon"
-            android:layout_width="@dimen/top_bar_height"
-            android:layout_height="@dimen/top_bar_height"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:layout_marginRight="5dp"
+            android:layout_marginLeft="5dp"
             android:contentDescription="favicon"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:padding="11dp"
+            android:padding="5dp"
             android:src="@drawable/internet"
             android:background="#01000000"/>
 
         <EditText
             android:id="@+id/textUrl"
             android:layout_width="0dp"
-            android:layout_height="34dp"
+            android:layout_height="44dp"
             android:layout_weight="1"
             android:layout_marginTop="3dp"
             android:background="#01000000"
             android:hint="@string/input_url"
             android:imeOptions="actionGo"
             android:inputType="textUri"
-            android:maxLines="1"
             android:textSize="15sp"
             android:textColor="#606060"
             android:textColorHint="#9f9f9f"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
             />
 
         <ImageView
             android:id="@+id/btnStart"
-            android:layout_width="@dimen/top_bar_height"
-            android:layout_height="@dimen/top_bar_height"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:contentDescription="refresh"
-            android:padding="11dp"
-            android:layout_marginRight="2dp"
-            android:layout_marginEnd="2dp"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:layout_marginRight="5dp"
             android:src="@drawable/refresh"
             android:background="#01000000"/>
 
     </LinearLayout>
 
 
-    <!-- 浏览器容器区域 -->
+    <!-- Multi-Tab -->
     <FrameLayout
         android:id="@+id/allPages"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:layout_marginTop="1dp"
         android:layout_marginBottom="1dp"
+        android:layout_weight="1"
         android:background="#d1d1d1">
 
-        <!--        <WebView-->
-        <!--            android:id="@+id/webView"-->
-        <!--            android:layout_width="match_parent"-->
-        <!--            android:layout_height="match_parent" />-->
-
     </FrameLayout>
-
-    <!-- Multiple pages -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="50dp"
@@ -101,11 +98,11 @@
             android:id="@+id/addNewPage"
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:padding="3dp"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="10dp"
-            android:src="@drawable/add_new_page"
-            />
+            android:src="@drawable/add_new_page" />
 
     </RelativeLayout>
 

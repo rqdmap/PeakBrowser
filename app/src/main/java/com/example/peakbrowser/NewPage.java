@@ -4,7 +4,11 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Icon;
 import android.os.Build;
+import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
@@ -12,21 +16,26 @@ import android.webkit.WebView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+
+
+
 public class NewPage{
-    ImageView icon;
+    IconView icon;
+    Bitmap iconBitmap;
     WebView web;
     int tag;
+    String title, url;
+    boolean active;
+
+    final static int paddingDP = 8;
 
     static private LinearLayout.LayoutParams pageIconParam;
     static private FrameLayout.LayoutParams webParam;
 
-    public static int dp2px(float dpValue) {
-        return (int) (0.5f + dpValue * Resources.getSystem().getDisplayMetrics().density);
-    }
 
     public static void initializeParam(){
-        pageIconParam = new LinearLayout.LayoutParams(dp2px(30), dp2px(30));
-        pageIconParam.setMargins(dp2px(10), 0, dp2px(10), 0);
+        pageIconParam = new LinearLayout.LayoutParams(WebActivity.dp2px(30), WebActivity.dp2px(30));
+        pageIconParam.setMargins(WebActivity.dp2px(10), 0, WebActivity.dp2px(10), 0);
 
         webParam = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -34,30 +43,60 @@ public class NewPage{
         );
     }
 
-    NewPage(WebActivity that, int tag){
+
+    NewPage(Context mContext, WebActivity that, final int tag){
         // Initialize webView
         web = new WebView(that);
         initWeb();
-        web.loadUrl("https://www.baidu.com/");
+        web.loadUrl("https://cn.bing.com");
+        web.setTag(tag);
         WebActivity.allPages.addView(web, webParam);
 
         // Initialize webIcon
-        icon = new ImageView(that);
+        icon = new IconView(mContext);
         icon.setLayoutParams(pageIconParam);
-        icon.setPadding(dp2px(3), dp2px(3),
-                dp2px(3), dp2px(3));
+        icon.setPadding(WebActivity.dp2px(paddingDP), WebActivity.dp2px(paddingDP),
+                WebActivity.dp2px(paddingDP), WebActivity.dp2px(paddingDP));
 
-        icon.setImageBitmap(web.getFavicon());
-        icon.setOnClickListener(that);
+        icon.setImageResource(R.drawable.internet);
+//        icon.setScaleType(ImageView.ScaleType.MATRIX);
+        icon.setOnClickListener(new MyImageView.OnClickListener() {
+            @Override
+            public void onClick(boolean isCancel) {
+                if(!active) onActive();
+                else if(!isCancel) onActive();
+                else if(WebActivity.pages.size() > 1){
+                    int tag = (int)icon.getTag();
+
+                    // Update new views.
+                    if(tag == 0) WebActivity.pages.get(1).onActive();
+                    else WebActivity.pages.get(tag - 1).onActive();
+
+                    // Remove old views and change related information.
+                    WebActivity.allIcons.removeView(icon);
+                    WebActivity.allPages.removeView(web);
+                    WebActivity.pages.remove(tag);
+                    for(int i = 0; i < WebActivity.pages.size(); i++)
+                        WebActivity.pages.get(i).updateTag(i);
+                }
+            }
+        });
         icon.setTag(tag);
         WebActivity.allIcons.addView(icon);
 
         // Initialize tag as index in the array.
         this.tag = tag;
+
+        // active onCreated
+        active = true;
     }
 
 
     public void onActive(){
+        // Change active status;
+        if(WebActivity.activeWeb != null) WebActivity.pages.get((int)WebActivity.activeWeb.getTag()).active = false;
+        active = true;
+
         // Change webView
         if(WebActivity.activeWeb != null) WebActivity.activeWeb.setVisibility(View.GONE);
         web.setVisibility(View.VISIBLE);
@@ -65,13 +104,16 @@ public class NewPage{
 
         // Change webIcon
         if(WebActivity.activeIcon != null) WebActivity.activeIcon.setBackgroundResource(0);
-        icon.setImageBitmap(web.getFavicon());
+        icon.setBackgroundResource(R.drawable.boarder);
         WebActivity.activeIcon = icon;
-        WebActivity.activeIcon.setBackgroundResource(R.drawable.boarder);
 
-        // Change top bar.
-        WebActivity.webIcon.setImageBitmap(web.getFavicon());
-        WebActivity.textUrl.setText(web.getTitle());
+        updateTopBar();
+    }
+
+    public void updateTopBar(){
+        if(iconBitmap != null) WebActivity.webIcon.setImageBitmap(Bitmap.createBitmap(iconBitmap));
+        else WebActivity.webIcon.setImageResource(R.drawable.internet);
+        WebActivity.textUrl.setText(title);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -85,7 +127,7 @@ public class NewPage{
         // 启用 js 功能
         settings.setJavaScriptEnabled(true);
         // 设置浏览器 UserAgent
-        settings.setUserAgentString(settings.getUserAgentString() + " mkBrowser/" + getVerName(WebActivity.mContext));
+        settings.setUserAgentString(settings.getUserAgentString() + " PeakBrowser/" + getVerName(WebActivity.mContext));
 
         // 将图片调整到适合 WebView 的大小
         settings.setUseWideViewPort(true);
@@ -134,5 +176,24 @@ public class NewPage{
             e.printStackTrace();
         }
         return verName;
+    }
+
+    public class IconView extends MyImageView{
+        public IconView(Context context) {
+            this(context, null);
+        }
+        public IconView(Context context, AttributeSet attrs) {
+            this(context, attrs, 0);
+        }
+        public IconView(Context context, AttributeSet attrs, int defStyleAttr) {
+            super(context, attrs, defStyleAttr);
+        }
+    }
+
+
+    public void updateTag(int tag){
+        this.tag = tag;
+        web.setTag(tag);
+        icon.setTag(tag);
     }
 }

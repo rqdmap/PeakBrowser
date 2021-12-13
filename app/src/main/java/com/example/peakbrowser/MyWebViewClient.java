@@ -3,6 +3,7 @@ package com.example.peakbrowser;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -10,18 +11,18 @@ import android.webkit.WebViewClient;
 public class MyWebViewClient extends WebViewClient {
     private static final String HTTP = "http://";
     private static final String HTTPS = "https://";
+    private static final String FTP = "FTP://";
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         // 设置在webView点击打开的新网页在当前界面显示,而不跳转到新的浏览器中
-
         if (url == null) {
             // 返回true自己处理，返回false不处理
             return true;
         }
 
         // 正常的内容，打开
-        if (url.startsWith(HTTP) || url.startsWith(HTTPS)) {
+        if (url.startsWith(HTTP) || url.startsWith(HTTPS) || url.startsWith(FTP)) {
             view.loadUrl(url);
             return true;
         }
@@ -44,19 +45,20 @@ public class MyWebViewClient extends WebViewClient {
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
-        // 更新状态文字
-        WebActivity.textUrl.setText("加载中...");
 
-        // 切换默认网页图标
-        WebActivity.webIcon.setImageResource(R.drawable.internet);
+        int id = (int)view.getTag();
+        WebActivity.pages.get(id).url = url;
+        if(favicon != null) {
+            WebActivity.pages.get(id).icon.setImageBitmap(favicon);
+            WebActivity.pages.get(id).iconBitmap = favicon;
+            if (WebActivity.pages.get(id).active)
+                WebActivity.webIcon.setImageBitmap(favicon);
+        }
     }
 
     @Override
     public void onPageFinished(WebView view, String url) {
         super.onPageFinished(view, url);
-        // 改变标题
-//        setTitle(activeWeb.getTitle());
-        // 显示页面标题
-        WebActivity.textUrl.setText(WebActivity.activeWeb.getTitle());
+        WebActivity.pages.get((int)view.getTag()).url = url;
     }
 }

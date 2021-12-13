@@ -3,9 +3,12 @@ package com.example.peakbrowser;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Selection;
+import android.text.Spannable;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -37,8 +40,7 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
     public static WebView activeWeb;
     public static LinearLayout allIcons;
     public static FrameLayout allPages;
-
-    private ArrayList<NewPage> pages = new ArrayList<>();
+    public static ArrayList<NewPage> pages = new ArrayList<>();
 
 
     private long exitTime = 0;
@@ -64,6 +66,8 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
 
         // Initialize every Views possibly.
         initView();
+
+//        getResources().getStringArray()
     }
 
 
@@ -84,7 +88,7 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
         btnAddPage = findViewById(R.id.addNewPage);
 
         NewPage.initializeParam();
-        pages.add(new NewPage(this, pages.size()));
+        pages.add(new NewPage(mContext, this, pages.size()));
         pages.get(0).onActive();
 
         // 绑定按钮点击事件
@@ -96,26 +100,26 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
 
         // Add new page...
         btnAddPage.setOnClickListener(this);
+        textUrl.setOnClickListener(this);
+
+
 
         // 地址输入栏获取与失去焦点处理
         textUrl.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
+
                 if (hasFocus) {
                     // 显示网站URL
-                    textUrl.setText(activeWeb.getUrl());
-                    // 选中全部文本
-                    textUrl.setSelectAllOnFocus(true);
-                    // 显示因特网图标
-                    webIcon.setImageResource(R.drawable.internet);
+                    textUrl.setText(pages.get((int)activeWeb.getTag()).url);
+                    Selection.selectAll((Spannable)textUrl.getText());
+
                     // 显示跳转按钮
                     btnStart.setImageResource(R.drawable.go);
                 } else {
-                    // 显示网站名
-                    textUrl.setText(activeWeb.getTitle());
-                    // 显示网站图标
-                    webIcon.setImageBitmap(activeWeb.getFavicon());
-                    activeIcon.setImageBitmap(activeWeb.getFavicon());
+                    // 显示网站名, 显示网站图标
+                    pages.get((int)activeWeb.getTag()).updateTopBar();
+
                     // 显示刷新按钮
                     btnStart.setImageResource(R.drawable.refresh);
                 }
@@ -165,6 +169,12 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
             // 跳转 或 刷新
             case R.id.btnStart:
                 if (textUrl.hasFocus()) {
+                    // Remove previous iconBitmap
+                    pages.get((int)activeWeb.getTag()).iconBitmap = null;
+                    activeIcon.setImageResource(R.drawable.internet);
+                    webIcon.setImageResource(R.drawable.internet);
+
+
                     // 隐藏软键盘
                     if (manager.isActive()) {
                         manager.hideSoftInputFromWindow(textUrl.getApplicationWindowToken(), 0);
@@ -180,9 +190,17 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
                         } catch (UnsupportedEncodingException e) {
                             e.printStackTrace();
                         }
-                        input = "https://www.baidu.com/s?wd=" + input + "&ie=UTF-8";
+                        input = "https://cn.bing.com/search?q=" + input;
+                        activeWeb.loadUrl(input);
                     }
-                    activeWeb.loadUrl(input);
+                    else{
+                        if(input.startsWith("http://") | input.startsWith("https://") |
+                                input.startsWith("ftp://"))
+                            activeWeb.loadUrl(input);
+                        else activeWeb.loadUrl("https://" + input);
+                    }
+
+//                    pages.get((int)activeWeb.getTag()).updateTopBar();
 
                     // 取消掉地址栏的焦点
                     textUrl.setText(activeWeb.getUrl());
@@ -196,11 +214,13 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
             // 后退
             case R.id.goBack:
                 activeWeb.goBack();
+                pages.get((int)activeWeb.getTag()).updateTopBar();
                 break;
 
             // 前进
             case R.id.goForward:
                 activeWeb.goForward();
+                pages.get((int)activeWeb.getTag()).updateTopBar();
                 break;
 
             // 设置
@@ -210,19 +230,18 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
 
             // 主页
             case R.id.goHome:
-                activeWeb.loadUrl("https://www.baidu.com");
+                activeWeb.loadUrl("https://cn.bing.com");
+                pages.get((int)activeWeb.getTag()).updateTopBar();
                 break;
 
             case R.id.addNewPage:
-                pages.add(new NewPage(this, pages.size()));
+                pages.add(new NewPage(mContext, this, pages.size()));
                 pages.get(pages.size() - 1).onActive();
                 break;
+            case R.id.textUrl:
+                Selection.selectAll((Spannable)textUrl.getText());
+                break;
             default:
-        }
-
-        if (v.getTag() != null) {
-            int tag = (int)v.getTag();
-            pages.get(tag).onActive();
         }
     }
 
@@ -247,23 +266,21 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
     }
 
     /**
-     * 判断字符串是否为URL（https://blog.csdn.net/bronna/article/details/77529145）
+     * 判断url的性质
      *
      * @param urls 要勘定的字符串
-     * @return true:是URL、false:不是URL
+     * @return true: 合法URL, false: 非法URL，交由搜索引擎
      */
     public static boolean isHttpUrl(String urls) {
-        boolean isUrl;
-        // 判断是否是网址的正则表达式
-        String regex = "(((https|http)?://)?([a-z0-9]+[.])|(www.))"
-                + "\\w+[.|\\/]([a-z0-9]{0,})?[[.]([a-z0-9]{0,})]+((/[\\S&&[^,;\u4E00-\u9FA5]]+)+)?([.][a-z0-9]{0,}+|/?)";
+        String regex = "((http|https|ftp)://)?[a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)+";
 
         Pattern pat = Pattern.compile(regex.trim());
         Matcher mat = pat.matcher(urls.trim());
-        isUrl = mat.matches();
-        return isUrl;
+        return mat.matches();
     }
 
 
-
+    public static int dp2px(float dpValue) {
+        return (int) (0.5f + dpValue * Resources.getSystem().getDisplayMetrics().density);
+    }
 }
