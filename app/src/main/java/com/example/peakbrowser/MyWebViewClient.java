@@ -7,11 +7,16 @@ import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import static com.example.peakbrowser.WebActivity.addinfo_history;
+
 
 public class MyWebViewClient extends WebViewClient {
     private static final String HTTP = "http://";
     private static final String HTTPS = "https://";
     private static final String FTP = "FTP://";
+    
+
+    private boolean if_load;// gzp 新增： 防止重定位造成历史记录多次添加进数据库
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -38,14 +43,14 @@ public class MyWebViewClient extends WebViewClient {
 //        catch (Exception e) {
 //            return true;
 //        }
-
+        if_load=false;//gzp新增
         return true;
     }
 
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
-
+        if_load=true;//gzp 新增
         int id = (int)view.getTag();
         WebActivity.pages.get(id).url = url;
         if(favicon != null) {
@@ -60,5 +65,10 @@ public class MyWebViewClient extends WebViewClient {
     public void onPageFinished(WebView view, String url) {
         super.onPageFinished(view, url);
         WebActivity.pages.get((int)view.getTag()).url = url;
+        if(if_load) {
+            addinfo_history(view.copyBackForwardList().getCurrentItem().getTitle(), view.copyBackForwardList().getCurrentItem().getUrl());
+            if_load = false;
+        }
     }
+
 }

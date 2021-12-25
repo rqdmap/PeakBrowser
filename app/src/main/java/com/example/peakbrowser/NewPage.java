@@ -21,7 +21,7 @@ import android.widget.LinearLayout;
 
 public class NewPage{
     IconView icon;
-    Bitmap iconBitmap;
+    Bitmap iconBitmap;//储存用于刷新的图标
     WebView web;
     int tag;
     String title, url;
@@ -43,12 +43,12 @@ public class NewPage{
         );
     }
 
-
-    NewPage(Context mContext, WebActivity that, final int tag){
+    //gzp 新添加url参数，点击历史记录需要跳转到相应页面
+    NewPage(Context mContext, WebActivity that, final int tag,String url){
         // Initialize webView
         web = new WebView(that);
         initWeb();
-        web.loadUrl("https://cn.bing.com");
+        web.loadUrl(url);
         web.setTag(tag);
         WebActivity.allPages.addView(web, webParam);
 
@@ -97,22 +97,22 @@ public class NewPage{
         if(WebActivity.activeWeb != null) WebActivity.pages.get((int)WebActivity.activeWeb.getTag()).active = false;
         active = true;
 
-        // Change webView
-        if(WebActivity.activeWeb != null) WebActivity.activeWeb.setVisibility(View.GONE);
-        web.setVisibility(View.VISIBLE);
+        // Change webView,显示网页视图
+        if(WebActivity.activeWeb != null) WebActivity.activeWeb.setVisibility(View.GONE);//不可见，但不占用资源
+        web.setVisibility(View.VISIBLE);//可见的
         WebActivity.activeWeb = web;
 
         // Change webIcon
-        if(WebActivity.activeIcon != null) WebActivity.activeIcon.setBackgroundResource(0);
-        icon.setBackgroundResource(R.drawable.boarder);
+        if(WebActivity.activeIcon != null) WebActivity.activeIcon.setBackgroundResource(0);//移除背景
+        icon.setBackgroundResource(R.drawable.boarder);//设置背景
         WebActivity.activeIcon = icon;
 
         updateTopBar();
     }
 
     public void updateTopBar(){
-        if(iconBitmap != null) WebActivity.webIcon.setImageBitmap(Bitmap.createBitmap(iconBitmap));
-        else WebActivity.webIcon.setImageResource(R.drawable.internet);
+        if(iconBitmap != null) WebActivity.webIcon.setImageBitmap(Bitmap.createBitmap(iconBitmap));//有的话就显示自己，主要用于重新刷新
+        else WebActivity.webIcon.setImageResource(R.drawable.internet);//没有的话就显示这个
         WebActivity.textUrl.setText(title);
     }
 
