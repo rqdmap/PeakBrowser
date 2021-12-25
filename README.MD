@@ -32,14 +32,15 @@ LOGO待定
 - 夜间模式/日照模式
 - 历史记录查询之后退出到之前的历史记录功能
 - 历史记录查询功能（只画了布局，还没写功能）
-- 美化
+- 美化页面
 
 #### Added
 
-- 新增了历史记录以及历史记录中的查看、删除、全部删除功能,历史记录被点击后，会新建页面而非覆盖原页面
-- 新建一个自定义SQLiteOpenHelper的子类MyDatabaseHelper，新建一个数据库用于存储WebView的历史记录于本地内存？？
-- 新建了history_activity,暂时用菜单栏中navSet作为跳转view中介
-- 发现百度主页上的阅读点击之后，并不会记录历史，必应则正常记录历史
+- 新增了历史记录功能,历史记录被点击后，会新建页面而非覆盖原页面
+- 新建一个自定义SQLiteOpenHelper的子类MyDatabaseHelper类，新建一个数据库用于存储WebView的历史记录于本地内存data/<APPID>/databases
+- 新建了historyactivity.java以及相应listView画布作为历史记录的展示页面
+- 使用AlertDialog作为弹窗增加相应功能
+- 发现百度主页上的阅读点击之后，必应和百度网页则正常记录历史
 
 ### 2021-12-14
 #### Added
