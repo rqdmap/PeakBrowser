@@ -22,5 +22,23 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_centerInParent">true</item>
     </style>
-    
+
+    <!--  gzp新加历史记录  -->
+    <style name="NormalDialogStyle">
+
+    </style>
+    <!--gpz新加 历史记录查看\删除\...按钮   -->
+    <style name="Button_dilog" >
+        <item name="android:layout_width">200dp</item>
+        <item name="android:textSize">25dp</item>
+        <item name="android:layout_height">70dp</item>
+        <item name="android:layout_centerInParent">true</item>
+    </style>
+    <!--gpz新加 menu_icon   -->
+    <style name="menu_icon" >
+        <item name="android:layout_width">80dp</item>
+        <item name="android:textSize">50dp</item>
+        <item name="android:layout_height">80dp</item>
+        <item name="android:layout_centerInParent">true</item>
+    </style>
 </resources>

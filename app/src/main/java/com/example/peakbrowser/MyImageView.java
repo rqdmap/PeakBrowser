@@ -64,7 +64,7 @@ public abstract class MyImageView extends ImageView {
     @Override
     public boolean onTouchEvent(MotionEvent event){
         ok = false;
-        checkArea(event);
+        checkArea(event);//检查touch是否在错号上
 
         mClick.onClick(ok);
         return super.onTouchEvent(event);
@@ -92,7 +92,7 @@ public abstract class MyImageView extends ImageView {
             mPath = new Path();
 
             mPath.addCircle(paths[0], paths[1],paths[2], Path.Direction.CW);
-            mPath.close();;
+            mPath.close();
         }
 
         public Path getmPath(){return mPath;}

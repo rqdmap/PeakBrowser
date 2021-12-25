@@ -19,16 +19,16 @@
         <ImageView
             android:id="@+id/webIcon"
             android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_height="22dp"
             android:layout_gravity="center"
-            android:layout_marginRight="5dp"
             android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:background="#01000000"
             android:contentDescription="favicon"
             android:focusable="true"
             android:focusableInTouchMode="true"
             android:padding="5dp"
-            android:src="@drawable/internet"
-            android:background="#01000000"/>
+            android:src="@drawable/internet" />
 
         <EditText
             android:id="@+id/textUrl"

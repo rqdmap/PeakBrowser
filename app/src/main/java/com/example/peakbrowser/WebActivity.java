@@ -1,17 +1,27 @@
 package com.example.peakbrowser;
 
+import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.text.Selection;
 import android.text.Spannable;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
@@ -31,7 +41,7 @@ import java.util.regex.Pattern;
 public class WebActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static EditText textUrl;
-    public static ImageView webIcon, goBack, goForward, navSet, goHome, btnStart;
+    public static ImageView webIcon, goBack, goForward, navSet, goHome, btnStart;//WebIcon就是左上角顶上图标
 
     //Add mething new...
     private ImageView btnAddPage;
@@ -41,7 +51,9 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
     public static LinearLayout allIcons;
     public static FrameLayout allPages;
     public static ArrayList<NewPage> pages = new ArrayList<>();
-
+    //gzp新加menuicon,需要在menu_icon.xml view中find
+    public static ImageView history_icon;
+    public static ImageView bookmark_icon;
 
     private long exitTime = 0;
     public static Context mContext;
@@ -49,6 +61,9 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
 
 
     private static final int PRESS_BACK_EXIT_GAP = 2000;
+
+    //gzp
+    private MyDatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +96,7 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
         navSet = findViewById(R.id.navSet);
         goHome = findViewById(R.id.goHome);
 
+
         activeWeb = null;
         activeIcon = null;
         allIcons = findViewById(R.id.allIcons);
@@ -88,7 +104,7 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
         btnAddPage = findViewById(R.id.addNewPage);
 
         NewPage.initializeParam();
-        pages.add(new NewPage(mContext, this, pages.size()));
+        pages.add(new NewPage(mContext, this, pages.size(),"https://cn.bing.com"));
         pages.get(0).onActive();
 
         // 绑定按钮点击事件
@@ -225,7 +241,36 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
 
             // 设置
             case R.id.navSet:
-                Toast.makeText(mContext, "功能开发中", Toast.LENGTH_SHORT).show();
+                //设置菜单栏弹窗
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                View view = LayoutInflater.from(this).inflate(R.layout.menu_icon, null);
+                builder.setPositiveButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                    }
+                });
+                builder.setView(view);
+                history_icon = view.findViewById(R.id.history_icon);
+                bookmark_icon = view.findViewById(R.id.bookmark_icon);
+                if(view.getParent() != null) {
+                    ((ViewGroup)view.getParent()).removeView(view); // <- fix
+                }
+                final AlertDialog d = builder.show();
+
+                //history_icon监听
+                history_icon.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        d.cancel();
+                        Intent hintent = new Intent(WebActivity.this,historyActivity.class);
+                        startActivityForResult(hintent,0);
+                    }
+                });
+
+
+
                 break;
 
             // 主页
@@ -235,7 +280,7 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
                 break;
 
             case R.id.addNewPage:
-                pages.add(new NewPage(mContext, this, pages.size()));
+                pages.add(new NewPage(mContext, this, pages.size(),"https://cn.bing.com"));
                 pages.get(pages.size() - 1).onActive();
                 break;
             case R.id.textUrl:
@@ -278,9 +323,34 @@ public class WebActivity extends AppCompatActivity implements View.OnClickListen
         Matcher mat = pat.matcher(urls.trim());
         return mat.matches();
     }
+    public  static void addinfo_history( String title,String url) {
+        //第二个参数是数据库名
+        MyDatabaseHelper dbHelper = new MyDatabaseHelper(mContext, "usersDataBase", null, 1);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("title", title);
+        values.put("url", url);
+        //insert（）方法中第一个参数是表名，第二个参数是表示给表中未指定数据的自动赋值为NULL。第三个参数是一个ContentValues对象
+        db.insert("historyDB", null, values);
+    }
 
 
     public static int dp2px(float dpValue) {
         return (int) (0.5f + dpValue * Resources.getSystem().getDisplayMetrics().density);
     }
+
+    //gzp 新增，用于接收history页面返回的url信息
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==0&&resultCode==RESULT_OK){
+            Toast.makeText(this,data.getExtras().getString("title"),Toast.LENGTH_SHORT).show();
+            pages.add(new NewPage(mContext, this, pages.size(),data.getExtras().getString("url")));
+            pages.get(pages.size() - 1).onActive();
+        }else if(requestCode==0&&resultCode==RESULT_CANCELED){
+
+            //什么都不干，简单回退
+        }
+    }
 }
+
